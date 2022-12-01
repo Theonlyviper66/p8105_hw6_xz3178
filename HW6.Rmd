@@ -1,0 +1,184 @@
+---
+title: "HW6"
+author: "Xuesen Zhao"
+date: "2022-11-30"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(tidyverse)
+library(ggridges)
+library(purrr)
+library(modelr)
+
+knitr::opts_chunk$set(
+	echo = TRUE,
+	warning = FALSE,
+	fig.width = 8, 
+  fig.height = 6,
+  out.width = "90%"
+)
+
+theme_set(theme_minimal() + theme(legend.position = "bottom"))
+
+options(
+  ggplot2.continuous.colour = "viridis",
+  ggplot2.continuous.fill = "viridis"
+)
+
+scale_colour_discrete = scale_colour_viridis_d
+scale_fill_discrete = scale_fill_viridis_d
+```
+
+## Question 1
+
+## Question 2
+
+```{r}
+homicides = read_csv("./data/homicide_data.csv") %>%
+  janitor::clean_names() 
+```
+
+The raw data was collected by Washington Post on over 52,000 criminal homicides over the past decade in 50 of the largest cities in the U.S. The original data set contained `r nrow(homicides)` rows and `r ncol(homicides)` columns. The features included the case id, reported date, the first and last name of the victim, as well as the race, age, and gender of the victim. It also contained variables that describe the location of homicides, and the disposition.
+
+```{r}
+homicides_new = homicides %>%
+  mutate(
+    city_state = str_c(city,", ",state),
+    solved_or_not = as.numeric(disposition == "Closed by arrest"),
+    victim_age = as.numeric(victim_age)
+  ) %>%
+  filter(
+    city_state != c("Dallas, TX", "Phoenix, AZ", "Kansas City, MO", "Tulsa, AL"),
+    victim_race == c("White", "Black"), 
+    ) 
+```
+
+To limit the scope of analysis for this problem, we excluded the cities Dallas, TX; Phoenix, AZ; and Kansas City, MO which do not report victim race. Tulsa, AL was also excluded because it was very likely a data entry error. A binary variable "solved_or_not" was created: cases that are "closed by arrest" were categorized as "resolved", while cases that are either "closed without arrest" or "open/no arrest" were categorized as "unresolved". Here, we only considered White or Black victim race because other races only accounted for a very small proportion of the data. 
+
+```{r}
+homicides_new %>%
+  filter(city_state == "Baltimore, MD") %>%
+  glm(solved_or_not ~ victim_age + victim_race + victim_sex, data = ., family = binomial() ) %>%
+  broom::tidy(conf.int =TRUE) %>%
+  mutate(
+    estimated_OR = exp(estimate),
+    CI_lower = exp(conf.low),
+    CI_higher = exp(conf.high)
+    ) %>%
+  filter(term == "victim_sexMale") %>%
+  select(term, estimated_OR, p.value, CI_lower, CI_higher) %>%
+  knitr::kable(digits = 3)
+```
+
+While keeping all other variables fixed, the odds of resolved cases for males is 2.561 times the odds of resolved cases for female. We are 95% confident that the true odds ratio of resolved cases for male vs. female is between 1.747 and 3.771. 
+
+```{r}
+homicides_new %>%
+  nest(each_city = -city_state) %>%
+  mutate(
+   glm = map(.x = each_city, ~glm(solved_or_not ~ victim_age + victim_race + victim_sex, data =., family = binomial)),
+   result = map(.x = glm, ~broom::tidy(.x, conf.int = TRUE,))
+  ) %>%
+  unnest(result) %>%
+  filter(term == "victim_sexMale") %>%
+  mutate(
+    estimated_OR = exp(estimate),
+    CI_lower = exp(conf.low),
+    CI_higher = exp(conf.high)
+    ) %>%
+  select(city_state, term, estimated_OR, CI_lower, CI_higher, p.value) %>%
+  knitr::kable(digits = 3)
+```
+
+```{r}
+homicides_new %>%
+  nest(each_city = -city_state) %>%
+  mutate(
+   glm = map(.x = each_city, ~glm(solved_or_not ~ victim_age + victim_race + victim_sex, data =., family = binomial)),
+   result = map(.x = glm, ~broom::tidy(.x, conf.int = TRUE,))
+  ) %>%
+  unnest(result) %>%
+  filter(term == "victim_sexMale") %>%
+  mutate(
+    estimated_OR = exp(estimate),
+    CI_lower = exp(conf.low),
+    CI_higher = exp(conf.high)
+    ) %>%
+  select(city_state, term, estimated_OR, CI_lower, CI_higher, p.value) %>%
+  ggplot(data = ., aes(x = reorder(city_state,+estimated_OR), y = estimated_OR, fill = estimated_OR))+geom_bar(stat="identity")+geom_errorbar(aes(ymin = CI_lower, ymax=CI_higher))+labs(title = "The estimated OR of solved homicides comparing males to females for each city", x = NULL, y = "OR of solved cases")+scale_fill_gradient(low="blue",high="red")+theme(axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=1))
+```
+
+As shown above, the odds ratio of solved cases for males victims is generally higher in all cities in our sample compared to the odds ratio of solved homicides for female victims. The odds ratio of solved homicides for males compared to females is highest in Albuquerque, NM: the OR for male victims is about twice the OR for female victims, while holding all other variables fixed. In contrast, the OR of solved cases between the two sexes is about 0 in New York, NY, while holding all other variables fixed. 
+
+## Question 3
+
+```{r}
+birthweight = read_csv("./data/birthweight.csv") %>%
+  janitor::clean_names() %>%
+  drop_na() %>%
+  mutate(
+    babysex = as.factor(babysex),
+    frace = as.factor(frace),
+    malform = as.factor(malform),
+    mrace = as.factor(mrace)
+  )
+```
+
+The head circumference of the newborns and length of the baby may be correlated with the baby's birth weight. In addition, certain variables such as weight gain since pregnancy could be indicative of maternal health and correlated with the birth weight of the baby. The following graphs showed that a linear relationship exist between the three independent variables and the response variable. 
+
+```{r}
+birthweight %>%
+  ggplot(aes(x=bhead, y = bwt))+geom_point()+labs(x = "head circumference (cm)", y = "birth weight (g)")
+birthweight %>%
+  ggplot(aes(x=blength, y = bwt))+geom_point()+labs(x = "length at birth (cm)", y = "birth weight (g)")
+birthweight %>%
+  ggplot(aes(x=wtgain, y = bwt))+geom_point()+labs(x = "weight gained (pounds)", y = "birth weight (g)")
+```
+
+```{r}
+lm1 = birthweight %>%
+  lm(bwt ~ bhead + blength + wtgain, data = .) 
+birthweight %>%
+  modelr::add_residuals(lm1) %>%
+  modelr::add_predictions(lm1) %>%
+  ggplot(aes(x = pred, y = resid)) + geom_point()+labs(title = "residual vs. fitted values for model 1", x = "fitted values", y = "residuals")
+```
+
+```{r}
+cv_df =
+  crossv_mc(birthweight, 100) %>% 
+  mutate(
+    train = map(train, as_tibble),
+    test = map(test, as_tibble)) %>%
+  mutate(
+    lm1 = map(train, ~lm(bwt ~ bhead + blength + wtgain, data = .x)),
+    lm2 = map(train, ~lm(bwt ~ blength + gaweeks, data = .x)), 
+    lm3 = map(train, ~lm(bwt ~ bhead+ blength + babysex + bhead*blength + bhead*babysex + blength*babysex + bhead*blength*babysex, data = .x))
+  ) %>%
+  mutate(
+    rmse_lm1 = map2_dbl(lm1, test, ~rmse(model = .x, data = .y)),
+    rmse_lm2    = map2_dbl(lm2, test, ~rmse(model = .x, data = .y)),
+    rmse_lm3 = map2_dbl(lm3, test, ~rmse(model = .x, data = .y))
+    )
+```
+
+
+```{r}
+cv_df %>% 
+  select(starts_with("rmse")) %>% 
+  pivot_longer(
+    everything(),
+    names_to = "model", 
+    values_to = "rmse",
+    names_prefix = "rmse_") %>% 
+  mutate(model = fct_inorder(model)) %>% 
+  ggplot(aes(x = model, y = rmse)) + geom_violin()
+```
+
+As shown above, the first and third model may be a better models because they have lower RMSE values. Model 1 is preferred because it's more simple than model 3 and it has a slightly lower RMSE value. 
