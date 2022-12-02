@@ -42,6 +42,30 @@ scale_fill_discrete = scale_fill_viridis_d
 
 ## Question 1
 
+``` r
+weather_df = 
+  rnoaa::meteo_pull_monitors(
+    c("USW00094728"),
+    var = c("PRCP", "TMIN", "TMAX"), 
+    date_min = "2017-01-01",
+    date_max = "2017-12-31") %>%
+  mutate(
+    name = recode(id, USW00094728 = "CentralPark_NY"),
+    tmin = tmin / 10,
+    tmax = tmax / 10) %>%
+  select(name, id, everything())
+```
+
+    ## Registered S3 method overwritten by 'hoardr':
+    ##   method           from
+    ##   print.cache_info httr
+
+    ## using cached file: C:\Users\david\AppData\Local/Cache/R/noaa_ghcnd/USW00094728.dly
+
+    ## date created (size, mb): 2022-09-29 13:31:23 (8.418)
+
+    ## file min/max dates: 1869-01-01 / 2022-09-30
+
 ## Question 2
 
 ``` r
@@ -199,7 +223,7 @@ homicides_new %>%
   ggplot(data = ., aes(x = reorder(city_state,+estimated_OR), y = estimated_OR, fill = estimated_OR))+geom_bar(stat="identity")+geom_errorbar(aes(ymin = CI_lower, ymax=CI_higher))+labs(title = "The estimated OR of solved homicides comparing males to females for each city", x = NULL, y = "OR of solved cases")+scale_fill_gradient(low="blue",high="red")+theme(axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=1))
 ```
 
-<img src="HW6_files/figure-gfm/unnamed-chunk-6-1.png" width="90%" />
+<img src="HW6_files/figure-gfm/unnamed-chunk-7-1.png" width="90%" />
 
 As shown above, the odds of solved cases for males victims is generally
 higher in all cities in our sample compared to the odds of solved
@@ -244,21 +268,21 @@ birthweight %>%
   ggplot(aes(x=bhead, y = bwt))+geom_point()+labs(x = "head circumference (cm)", y = "birth weight (g)")
 ```
 
-<img src="HW6_files/figure-gfm/unnamed-chunk-8-1.png" width="90%" />
+<img src="HW6_files/figure-gfm/unnamed-chunk-9-1.png" width="90%" />
 
 ``` r
 birthweight %>%
   ggplot(aes(x=blength, y = bwt))+geom_point()+labs(x = "length at birth (cm)", y = "birth weight (g)")
 ```
 
-<img src="HW6_files/figure-gfm/unnamed-chunk-8-2.png" width="90%" />
+<img src="HW6_files/figure-gfm/unnamed-chunk-9-2.png" width="90%" />
 
 ``` r
 birthweight %>%
   ggplot(aes(x=wtgain, y = bwt))+geom_point()+labs(x = "weight gained (pounds)", y = "birth weight (g)")
 ```
 
-<img src="HW6_files/figure-gfm/unnamed-chunk-8-3.png" width="90%" />
+<img src="HW6_files/figure-gfm/unnamed-chunk-9-3.png" width="90%" />
 
 The first hypothesized model lm1 is :
 $bwt = \beta_0+\beta_1bhead+\beta_2blength+\beta_3wtgain$
@@ -272,7 +296,7 @@ birthweight %>%
   ggplot(aes(x = pred, y = resid)) + geom_point()+labs(title = "residual vs. fitted values for model 1", x = "fitted values", y = "residuals")
 ```
 
-<img src="HW6_files/figure-gfm/unnamed-chunk-9-1.png" width="90%" />
+<img src="HW6_files/figure-gfm/unnamed-chunk-10-1.png" width="90%" />
 
 Next, two additional models were generated and compared to our
 hypothesized model. Model 2 involved length at birth and gestational age
@@ -310,7 +334,7 @@ cv_df %>%
   ggplot(aes(x = model, y = rmse)) + geom_violin()
 ```
 
-<img src="HW6_files/figure-gfm/unnamed-chunk-11-1.png" width="90%" />
+<img src="HW6_files/figure-gfm/unnamed-chunk-12-1.png" width="90%" />
 
 As shown above, the first and third model may be better models because
 they have lower RMSE values. Model 1 is preferred because it’s more
