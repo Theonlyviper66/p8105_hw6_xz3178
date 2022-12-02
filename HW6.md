@@ -260,6 +260,9 @@ birthweight %>%
 
 <img src="HW6_files/figure-gfm/unnamed-chunk-8-3.png" width="90%" />
 
+The first hypothesized model lm1 is :
+$bwt = \beta_0+\beta_1bhead+\beta_2blength+\beta_3wtgain$
+
 ``` r
 lm1 = birthweight %>%
   lm(bwt ~ bhead + blength + wtgain, data = .) 
@@ -270,6 +273,12 @@ birthweight %>%
 ```
 
 <img src="HW6_files/figure-gfm/unnamed-chunk-9-1.png" width="90%" />
+
+Next, two additional models were generated and compared to our
+hypothesized model. Model 2 involved length at birth and gestational age
+as predictors, and model 3 used head circumference, length, sex, and all
+interactions (including the three-way interaction) between these as the
+predictors.
 
 ``` r
 cv_df =
@@ -303,6 +312,6 @@ cv_df %>%
 
 <img src="HW6_files/figure-gfm/unnamed-chunk-11-1.png" width="90%" />
 
-As shown above, the first and third model may be a better models because
+As shown above, the first and third model may be better models because
 they have lower RMSE values. Model 1 is preferred because it’s more
 simple than model 3 and it has a slightly lower RMSE value.

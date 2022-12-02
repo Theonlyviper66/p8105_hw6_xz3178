@@ -141,6 +141,8 @@ birthweight %>%
   ggplot(aes(x=wtgain, y = bwt))+geom_point()+labs(x = "weight gained (pounds)", y = "birth weight (g)")
 ```
 
+The first hypothesized model lm1 is : $bwt = \beta_0+\beta_1bhead+\beta_2blength+\beta_3wtgain$
+
 ```{r}
 lm1 = birthweight %>%
   lm(bwt ~ bhead + blength + wtgain, data = .) 
@@ -149,6 +151,8 @@ birthweight %>%
   modelr::add_predictions(lm1) %>%
   ggplot(aes(x = pred, y = resid)) + geom_point()+labs(title = "residual vs. fitted values for model 1", x = "fitted values", y = "residuals")
 ```
+
+Next, two additional models were generated and compared to our hypothesized model. Model 2 involved length at birth and gestational age as predictors, and model 3 used head circumference, length, sex, and all interactions (including the three-way interaction) between these as the predictors. 
 
 ```{r}
 cv_df =
@@ -181,4 +185,4 @@ cv_df %>%
   ggplot(aes(x = model, y = rmse)) + geom_violin()
 ```
 
-As shown above, the first and third model may be a better models because they have lower RMSE values. Model 1 is preferred because it's more simple than model 3 and it has a slightly lower RMSE value. 
+As shown above, the first and third model may be better models because they have lower RMSE values. Model 1 is preferred because it's more simple than model 3 and it has a slightly lower RMSE value. 
