@@ -114,7 +114,7 @@ homicides_new %>%
   ggplot(data = ., aes(x = reorder(city_state,+estimated_OR), y = estimated_OR, fill = estimated_OR))+geom_bar(stat="identity")+geom_errorbar(aes(ymin = CI_lower, ymax=CI_higher))+labs(title = "The estimated OR of solved homicides comparing males to females for each city", x = NULL, y = "OR of solved cases")+scale_fill_gradient(low="blue",high="red")+theme(axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=1))
 ```
 
-As shown above, the odds ratio of solved cases for males victims is generally higher in all cities in our sample compared to the odds ratio of solved homicides for female victims. The odds ratio of solved homicides for males compared to females is highest in Albuquerque, NM: the OR for male victims is about twice the OR for female victims, while holding all other variables fixed. In contrast, the OR of solved cases between the two sexes is about 0 in New York, NY, while holding all other variables fixed. 
+As shown above, the odds of solved cases for males victims is generally higher in all cities in our sample compared to the odds of solved homicides for female victims. The odds ratio of solved homicides for males compared to females is highest in Albuquerque, NM: the odds of solved homicides for male victims is about twice the odds of resolved homicides for female victims, while holding all other variables fixed. In contrast, the odds ratio of solved cases between the two sexes is about 0 in New York, NY, while holding all other variables fixed. 
 
 ## Question 3
 
