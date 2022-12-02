@@ -66,6 +66,38 @@ weather_df =
 
     ## file min/max dates: 1869-01-01 / 2022-09-30
 
+``` r
+weather_df %>% 
+  modelr::bootstrap(n = 1000) %>% 
+  mutate(
+    models = map(strap, ~lm(tmax ~ tmin, data = .x) ),
+    results = map(models, broom::glance)) %>% 
+  select(-strap, -models) %>% 
+  unnest(results) %>% 
+  ggplot(aes(x = r.squared)) + geom_density()
+```
+
+<img src="HW6_files/figure-gfm/unnamed-chunk-3-1.png" width="90%" />
+
+``` r
+weather_df %>% 
+  modelr::bootstrap(n = 1000) %>% 
+  mutate(
+    models = map(strap, ~lm(tmax ~ tmin, data = .x) ),
+    results = map(models, broom::tidy)) %>% 
+  select(-strap, -models) %>% 
+  unnest(results) %>% 
+  select(id = `.id`, term, estimate) %>% 
+  pivot_wider(
+    names_from = term, 
+    values_from = estimate) %>% 
+  rename(beta0 = `(Intercept)`, beta1 = tmin) %>% 
+  mutate(log_b0b1 = log(beta0 * beta1)) %>% 
+  ggplot(aes(x = log_b0b1)) + geom_density()
+```
+
+<img src="HW6_files/figure-gfm/unnamed-chunk-4-1.png" width="90%" />
+
 ## Question 2
 
 ``` r
@@ -223,7 +255,7 @@ homicides_new %>%
   ggplot(data = ., aes(x = reorder(city_state,+estimated_OR), y = estimated_OR, fill = estimated_OR))+geom_bar(stat="identity")+geom_errorbar(aes(ymin = CI_lower, ymax=CI_higher))+labs(title = "The estimated OR of solved homicides comparing males to females for each city", x = NULL, y = "OR of solved cases")+scale_fill_gradient(low="blue",high="red")+theme(axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=1))
 ```
 
-<img src="HW6_files/figure-gfm/unnamed-chunk-7-1.png" width="90%" />
+<img src="HW6_files/figure-gfm/unnamed-chunk-9-1.png" width="90%" />
 
 As shown above, the odds of solved cases for males victims is generally
 higher in all cities in our sample compared to the odds of solved
@@ -268,21 +300,21 @@ birthweight %>%
   ggplot(aes(x=bhead, y = bwt))+geom_point()+labs(x = "head circumference (cm)", y = "birth weight (g)")
 ```
 
-<img src="HW6_files/figure-gfm/unnamed-chunk-9-1.png" width="90%" />
+<img src="HW6_files/figure-gfm/unnamed-chunk-11-1.png" width="90%" />
 
 ``` r
 birthweight %>%
   ggplot(aes(x=blength, y = bwt))+geom_point()+labs(x = "length at birth (cm)", y = "birth weight (g)")
 ```
 
-<img src="HW6_files/figure-gfm/unnamed-chunk-9-2.png" width="90%" />
+<img src="HW6_files/figure-gfm/unnamed-chunk-11-2.png" width="90%" />
 
 ``` r
 birthweight %>%
   ggplot(aes(x=wtgain, y = bwt))+geom_point()+labs(x = "weight gained (pounds)", y = "birth weight (g)")
 ```
 
-<img src="HW6_files/figure-gfm/unnamed-chunk-9-3.png" width="90%" />
+<img src="HW6_files/figure-gfm/unnamed-chunk-11-3.png" width="90%" />
 
 The first hypothesized model lm1 is :
 $bwt = \beta_0+\beta_1bhead+\beta_2blength+\beta_3wtgain$
@@ -296,7 +328,7 @@ birthweight %>%
   ggplot(aes(x = pred, y = resid)) + geom_point()+labs(title = "residual vs. fitted values for model 1", x = "fitted values", y = "residuals")
 ```
 
-<img src="HW6_files/figure-gfm/unnamed-chunk-10-1.png" width="90%" />
+<img src="HW6_files/figure-gfm/unnamed-chunk-12-1.png" width="90%" />
 
 Next, two additional models were generated and compared to our
 hypothesized model. Model 2 involved length at birth and gestational age
@@ -334,7 +366,7 @@ cv_df %>%
   ggplot(aes(x = model, y = rmse)) + geom_violin()
 ```
 
-<img src="HW6_files/figure-gfm/unnamed-chunk-12-1.png" width="90%" />
+<img src="HW6_files/figure-gfm/unnamed-chunk-14-1.png" width="90%" />
 
 As shown above, the first and third model may be better models because
 they have lower RMSE values. Model 1 is preferred because it’s more
